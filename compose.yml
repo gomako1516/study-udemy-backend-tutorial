@@ -1,0 +1,43 @@
+services:
+  web:
+    build: ./docker/web # web/Dockerfileを元にビルド
+    container_name: web # コンテナーの名前
+    environment: # 環境変数
+      TZ: "Asia/Tokyo" # 時刻を日本時間に設定
+    ports: # ブラウザでWebサーバを参照するポート番号を指定
+      - "8080:80"
+    volumes: # Webサーバから参照可能にする設定（開発したPHPファイルを参照できる）
+      - ./batch:/var/www/batch
+      - ./app:/var/www/app
+    depends_on:
+      - db
+
+  db:
+    build: ./docker/db # db/Dcokerfileを元にビルド
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: "udemy"
+      TZ: "Asia/Tokyo"
+    ports:
+      - 3306:3306
+    volumes:
+      # - "udemy_codeMafia_data:/var/lib/mysql" # MySQLを保存する領域
+      # - "./docker/db/init:/docker-entrypoint-initdb.d" # テスト用データを作成する設定
+      - "./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf" # MySQLの設定
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: "udemy"
+    depends_on:
+      - db
+
+volumes: # Dockerをdownしてもデータが消えない
+  udemy_data:
+    driver: local
